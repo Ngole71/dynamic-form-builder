@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Dynamic Form Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .form-builder {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            min-height: 600px;
+        }
+
+        .question-library {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .master-question {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .master-question:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .master-question.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .question-text {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #2d3748;
+        }
+
+        .question-type {
+            font-size: 12px;
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .question-tags {
+            font-size: 11px;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .add-question-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .add-question-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .add-question-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .workflow-indicator {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .workflow-step.completed {
+            color: #4caf50;
+        }
+
+        .workflow-step.active {
+            color: #2196f3;
+            font-weight: 600;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .step-number.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .step-number.active {
+            background: #2196f3;
+            color: white;
+        }
+
+        .form-question {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .form-question.nested {
+            margin-left: 30px;
+            border-left: 4px solid #667eea;
+            background: #f7fafc;
+        }
+
+        .form-question.nested-2 {
+            margin-left: 60px;
+            border-left: 4px solid #9f7aea;
+            background: #faf5ff;
+        }
+
+        .form-question.nested-3 {
+            margin-left: 90px;
+            border-left: 4px solid #38b2ac;
+            background: #f0fdfa;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .question-text-container {
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .editable-text {
+            width: 100%;
+            background: transparent;
+            border: 1px dashed #cbd5e0;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .editable-text:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .question-type-dropdown {
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            background: white;
+        }
+
+        .question-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .options-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .options-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .option-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .option-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-option-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #edf2f7;
+            border-radius: 6px;
+        }
+
+        .add-option-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+        }
+
+        .error {
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+            color: #742a2a;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .connection-status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .connection-status.connected {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .connection-status.disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-renderer {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .rendered-question {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            background: #f7fafc;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .rendered-question.nested {
+            margin-left: 30px;
+            border-left-color: #a0aec0;
+        }
+
+        .question-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .checkbox-group, .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-item, .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .json-output {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #2d3748;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        .form-actions {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .form-actions input, .form-actions select {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tag-filter {
+            padding: 4px 8px;
+            background: #edf2f7;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tag-filter.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Enhanced Dynamic Form Builder</h1>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('builder')">Form Builder</button>
+            <button class="tab" onclick="switchTab('renderer')">Form Preview</button>
+            <button class="tab" onclick="switchTab('json')">JSON Output</button>
+        </div>
+
+        <!-- Form Builder Tab -->
+        <div id="builder-tab" class="tab-content active">
+            <div class="main-content">
+                <div class="sidebar">
+                    <h3>Master Question Library</h3>
+                    
+                    <div id="connectionStatus" class="connection-status disconnected">
+                        🔴 Connecting to backend...
+                    </div>
+
+                    <div class="workflow-indicator">
+                        <div class="workflow-step active" id="step-1">
+                            <span class="step-number active">1</span>
+                            <span>Select from library</span>
+                        </div>
+                        <div class="workflow-step" id="step-2">
+                            <span class="step-number">2</span>
+                            <span>Customize question</span>
+                        </div>
+                        <div class="workflow-step" id="step-3">
+                            <span class="step-number">3</span>
+                            <span>Add/edit options</span>
+                        </div>
+                        <div class="workflow-step" id="step-4">
+                            <span class="step-number">4</span>
+                            <span>Build conditional logic</span>
+                        </div>
+                    </div>
+
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search questions..." onkeyup="filterQuestions()">
+                    
+                    <div class="filter-tags" id="filterTags">
+                        <!-- Dynamic tags will be loaded here -->
+                    </div>
+
+                    <button class="add-question-btn" id="addQuestionBtn" onclick="addSelectedQuestion()" disabled>
+                        ➕ Add Selected Question
+                    </button>
+
+                    <div class="question-library" id="masterQuestions">
+                        <div class="loading">Loading questions from backend...</div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <h4>How it works:</h4>
+                        <ul style="font-size: 12px; color: #718096; margin-top: 10px; line-height: 1.5;">
+                            <li>Select a question from the library</li>
+                            <li>Customize text and options</li>
+                            <li>Add sub-questions for conditional logic</li>
+                            <li>Build complex forms step by step</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-builder">
+                    <h2>🔧 Form Builder</h2>
+                    
+                    <div id="formQuestions">
+                        <div class="empty-state">
+                            <h3>Select a question from the master library</h3>
+                            <p>Choose a question from the sidebar and click "Add Selected Question" to begin building your form</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <input type="text" id="formName" placeholder="Form Name" value="Dynamic Health Assessment">
+                <input type="text" id="tenantId" placeholder="Tenant ID" value="tenant_001">
+                <select id="formTags">
+                    <option value="onboarding">Onboarding</option>
+                    <option value="self-logging">Self Logging</option>
+                    <option value="assessment">Assessment</option>
+                    <option value="survey">Survey</option>
+                </select>
+                <button class="btn btn-primary" onclick="saveForm()">💾 Save Form</button>
+                <button class="btn btn-secondary" onclick="loadForm()">📂 Load Form</button>
+                <button class="btn btn-secondary" onclick="clearForm()">🗑️ Clear Form</button>
+                <span id="saveStatus"></span>
+            </div>
+        </div>
+
+        <!-- Form Renderer Tab -->
+        <div id="renderer-tab" class="tab-content">
+            <div class="form-renderer">
+                <h2>Form Preview</h2>
+                <div id="renderedForm">
+                    <div class="empty-state">
+                        <h3>Build a form to see the preview</h3>
+                        <p>Add questions and options to see how your form will look to users</p>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="submitForm()" style="margin-top: 20px;">Submit Response</button>
+            </div>
+        </div>
+
+        <!-- JSON Output Tab -->
+        <div id="json-tab" class="tab-content">
+            <div class="form-renderer">
+                <h2>JSON Structure</h2>
+                <div class="json-output" id="jsonOutput">
+                    Build a form to see the JSON structure
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced form builder state
+        const API_BASE_URL = 'http://localhost:3000/api';
+        
+        let masterQuestionsList = [];
+        let filteredQuestions = [];
+        let selectedMasterQuestion = null;
+        let selectedQuestionForSubQ = null;
+        let availableTags = [];
+        let activeTags = [];
+        let isBackendConnected = false;
+        
+        let currentForm = {
+            id: null,
+            name: "",
+            tenantId: "",
+            tags: [],
+            questions: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        let questionCounter = 0;
+        let workflowStep = 1;
+
+        // Initialize the application
+        async function init() {
+            await loadMasterQuestions();
+            updateFormDisplay();
+            updateJsonOutput();
+            updateWorkflowIndicator();
+        }
+
+        // Load master questions from backend
+        async function loadMasterQuestions() {
+            try {
+                updateConnectionStatus('connecting');
+                
+                const response = await fetch(`${API_BASE_URL}/master-questions`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = response.json ? await response.json() : [];
+                masterQuestionsList = Array.isArray(data) ? data : (data.questions || []);
+                
+                updateConnectionStatus('connected');
+                isBackendConnected = true;
+                
+                // Extract unique tags
+                availableTags = [...new Set(masterQuestionsList.flatMap(q => q.tags || []))];
+                
+                displayMasterQuestions();
+                displayFilterTags();
+                
+            } catch (error) {
+                console.error('Failed to load master questions:', error);
+                updateConnectionStatus('disconnected', error.message);
+                
+                // Fallback to sample data
+                masterQuestionsList = getSampleQuestions();
+                availableTags = [...new Set(masterQuestionsList.flatMap(q => q.tags || []))];
+                displayMasterQuestions();
+                displayFilterTags();
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(status, errorMessage = '') {
+            const statusEl = document.getElementById('connectionStatus');
+            
+            if (status === 'connecting') {
+                statusEl.className = 'connection-status disconnected';
+                statusEl.innerHTML = '🟡 Connecting to backend...';
+            } else if (status === 'connected') {
+                statusEl.className = 'connection-status connected';
+                statusEl.innerHTML = '🟢 Connected to backend';
+            } else {
+                statusEl.className = 'connection-status disconnected';
+                statusEl.innerHTML = `🔴 Backend offline - using sample data ${errorMessage ? '(' + errorMessage + ')' : ''}`;
+            }
+        }
+
+        // Get sample questions for fallback
+        function getSampleQuestions() {
+            return [
+                {
+                    id: 1,
+                    text: "Please input your Name",
+                    type: "text",
+                    tags: ["basic", "personal"]
+                },
+                {
+                    id: 2,
+                    text: "Please input your DOB",
+                    type: "date", 
+                    tags: ["basic", "personal"]
+                },
+                {
+                    id: 3,
+                    text: "Please enter your health goals",
+                    type: "multiselect",
+                    options: ["Weight Loss", "Muscle Gain", "Better Sleep", "Stress Management", "Quit Smoking", "Improve Fitness"],
+                    max_selections: 3,
+                    tags: ["health", "goals"]
+                },
+                {
+                    id: 4,
+                    text: "Do you smoke?",
+                    type: "radio",
+                    options: ["Yes", "No"],
+                    tags: ["health", "habits"]
+                },
+                {
+                    id: 5,
+                    text: "How many cigarettes do you smoke?",
+                    type: "radio",
+                    options: ["<5 per day", "5-10 per day", "10-20 per day", ">20 per day"],
+                    tags: ["health", "smoking"]
+                },
+                {
+                    id: 6,
+                    text: "Do you drink alcohol?",
+                    type: "radio",
+                    options: ["Yes", "No"],
+                    tags: ["health", "habits"]
+                },
+                {
+                    id: 7,
+                    text: "How many drinks per week?",
+                    type: "radio",
+                    options: ["<5", "5-10", "10-20", ">20"],
+                    tags: ["health", "drinking"]
+                },
+                {
+                    id: 8,
+                    text: "What types of alcohol do you drink?",
+                    type: "multiselect",
+                    options: ["Beer", "Wine", "Hard Liquor", "Mixed Drinks"],
+                    tags: ["health", "drinking"]
+                },
+                {
+                    id: 9,
+                    text: "How would you rate your current health?",
+                    type: "radio",
+                    options: ["Excellent", "Good", "Fair", "Poor"],
+                    tags: ["health", "self-assessment"]
+                },
+                {
+                    id: 10,
+                    text: "What is your current weight (kg)?",
+                    type: "number",
+                    tags: ["health", "physical"]
+                }
+            ];
+        }
+
+        // Display filter tags
+        function displayFilterTags() {
+            const container = document.getElementById('filterTags');
+            container.innerHTML = '';
+            
+            availableTags.forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = `tag-filter ${activeTags.includes(tag) ? 'active' : ''}`;
+                tagEl.textContent = tag;
+                tagEl.onclick = () => toggleTagFilter(tag);
+                container.appendChild(tagEl);
+            });
+        }
+
+        // Toggle tag filter
+        function toggleTagFilter(tag) {
+            if (activeTags.includes(tag)) {
+                activeTags = activeTags.filter(t => t !== tag);
+            } else {
+                activeTags.push(tag);
+            }
+            displayFilterTags();
+            filterQuestions();
+        }
+
+        // Filter questions based on search and tags
+        function filterQuestions() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredQuestions = masterQuestionsList.filter(question => {
+                const matchesSearch = !searchTerm || 
+                    question.text.toLowerCase().includes(searchTerm) ||
+                    (question.tags && question.tags.some(tag => tag.toLowerCase().includes(searchTerm)));
+                
+                const matchesTags = activeTags.length === 0 || 
+                    (question.tags && activeTags.some(tag => question.tags.includes(tag)));
+                
+                return matchesSearch && matchesTags;
+            });
+            
+            displayMasterQuestions();
+        }
+
+        // Display master questions
+        function displayMasterQuestions() {
+            const container = document.getElementById('masterQuestions');
+            const questionsToShow = filteredQuestions.length > 0 ? filteredQuestions : masterQuestionsList;
+            
+            if (questionsToShow.length === 0) {
+                container.innerHTML = '<div class="loading">No questions found</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            questionsToShow.forEach(question => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'master-question';
+                questionDiv.onclick = () => selectMasterQuestion(question);
+                
+                if (selectedMasterQuestion && selectedMasterQuestion.id === question.id) {
+                    questionDiv.classList.add('selected');
+                }
+                
+                const optionsDisplay = question.options ? 
+                    `<div style="font-size: 11px; color: #718096; margin-top: 3px;">${question.options.length} option(s)</div>` : '';
+                
+                questionDiv.innerHTML = `
+                    <div class="question-text">${question.text}</div>
+                    <span class="question-type">${question.type}</span>
+                    ${optionsDisplay}
+                    <div class="question-tags">${(question.tags || []).join(', ')}</div>
+                `;
+                
+                container.appendChild(questionDiv);
+            });
+        }
+
+        // Select a master question
+        function selectMasterQuestion(question) {
+            document.querySelectorAll('.master-question').forEach(q => q.classList.remove('selected'));
+            event.target.closest('.master-question').classList.add('selected');
+            
+            selectedMasterQuestion = question;
+            document.getElementById('addQuestionBtn').disabled = false;
+            updateWorkflowStep(2);
+        }
+
+        // Add selected question to form
+        function addSelectedQuestion(parentId = null) {
+            if (!selectedMasterQuestion) {
+                alert('Please select a question from the master library first');
+                return;
+            }
+            
+            const questionId = `q_${++questionCounter}`;
+            
+            const formQuestion = {
+                id: questionId,
+                masterId: selectedMasterQuestion.id,
+                text: selectedMasterQuestion.text,
+                type: selectedMasterQuestion.type,
+                options: selectedMasterQuestion.options ? [...selectedMasterQuestion.options] : [],
+                maxSelections: selectedMasterQuestion.max_selections || null,
+                parentId: parentId,
+                conditions: parentId ? [] : [],
+                subQuestions: [],
+                required: false
+            };
+
+            if (parentId) {
+                const parent = findQuestionById(currentForm.questions, parentId);
+                if (parent) {
+                    parent.subQuestions.push(formQuestion);
+                }
+            } else {
+                currentForm.questions.push(formQuestion);
+            }
+
+            updateFormDisplay();
+            updateJsonOutput();
+            
+            // Reset selection
+            selectedMasterQuestion = null;
+            document.querySelectorAll('.master-question').forEach(q => q.classList.remove('selected'));
+            document.getElementById('addQuestionBtn').disabled = true;
+            updateWorkflowStep(3);
+        }
+
+        // Update workflow indicator
+        function updateWorkflowIndicator() {
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step-${i}`);
+                const stepNumber = step.querySelector('.step-number');
+                
+                if (i < workflowStep) {
+                    step.classList.remove('active');
+                    step.classList.add('completed');
+                    stepNumber.classList.remove('active');
+                    stepNumber.classList.add('completed');
+                    stepNumber.textContent = '✓';
+                } else if (i === workflowStep) {
+                    step.classList.remove('completed');
+                    step.classList.add('active');
+                    stepNumber.classList.remove('completed');
+                    stepNumber.classList.add('active');
+                    stepNumber.textContent = i;
+                } else {
+                    step.classList.remove('active', 'completed');
+                    stepNumber.classList.remove('active', 'completed');
+                    stepNumber.textContent = i;
+                }
+            }
+        }
+
+        // Update workflow step
+        function updateWorkflowStep(step) {
+            workflowStep = step;
+            updateWorkflowIndicator();
+        }
+
+        // Find question by ID in nested structure
+        function findQuestionById(questions, id) {
+            for (let question of questions) {
+                if (question.id === id) return question;
+                if (question.subQuestions) {
+                    const found = findQuestionById(question.subQuestions, id);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        // Update form display
+        function updateFormDisplay() {
+            const container = document.getElementById('formQuestions');
+            
+            if (currentForm.questions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>👈 Select a question from the master library</h3>
+                        <p>Choose a question from the sidebar and click "Add Selected Question" to begin building your form</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            renderQuestions(currentForm.questions, container, 0);
+            updateFormPreview();
+        }
+
+        // Render questions recursively
+        function renderQuestions(questions, container, level) {
+            questions.forEach(question => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = `form-question ${level > 0 ? `nested${level > 1 ? '-' + level : ''}` : ''}`;
+                
+                const needsOptions = ['radio', 'multiselect', 'checkbox'].includes(question.type);
+                
+                questionDiv.innerHTML = `
+                    <div class="question-header">
+                        <div class="question-text-container">
+                            <input type="text" class="editable-text" value="${question.text}" 
+                                   onchange="updateQuestionText('${question.id}', this.value)"
+                                   placeholder="Enter your question text">
+                            <select class="question-type-dropdown" onchange="changeQuestionType('${question.id}', this.value)">
+                                <option value="text" ${question.type === 'text' ? 'selected' : ''}>📝 Text</option>
+                                <option value="number" ${question.type === 'number' ? 'selected' : ''}>🔢 Number</option>
+                                <option value="date" ${question.type === 'date' ? 'selected' : ''}>📅 Date</option>
+                                <option value="radio" ${question.type === 'radio' ? 'selected' : ''}>⚪ Radio</option>
+                                <option value="multiselect" ${question.type === 'multiselect' ? 'selected' : ''}>☑️ Multi-Select</option>
+                                <option value="checkbox" ${question.type === 'checkbox' ? 'selected' : ''}>✅ Checkbox</option>
+                            </select>
+                        </div>
+                        <div class="question-controls">
+                            <button class="btn btn-success" onclick="setSelectedQuestionForSubQ('${question.id}')">Add Sub-Q</button>
+                            <button class="btn btn-danger" onclick="removeQuestion('${question.id}')">Remove</button>
+                        </div>
+                    </div>
+                    
+                    ${needsOptions ? `
+                        <div class="options-container">
+                            <div class="options-header">
+                                <strong>Options:</strong>
+                                <span style="font-size: 12px; color: #718096;">${question.options.length} option(s)</span>
+                            </div>
+                            <div id="options_${question.id}">
+                                ${question.options.map((option, index) => `
+                                    <div class="option-item">
+                                        <input type="text" class="option-input" value="${option}" 
+                                               onchange="updateOption('${question.id}', ${index}, this.value)"
+                                               placeholder="Enter option text">
+                                        <div class="option-actions">
+                                            <button class="btn btn-secondary" onclick="addSubQuestionForOption('${question.id}', '${option}')">Add Sub-Q</button>
+                                            <button class="btn btn-danger" onclick="removeOption('${question.id}', ${index})">×</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="add-option-form">
+                                <input type="text" class="add-option-input" id="newOption_${question.id}" 
+                                       placeholder="Enter new option" onkeypress="handleOptionKeyPress(event, '${question.id}')">
+                                <button class="btn btn-primary" onclick="addOption('${question.id}')">Add Option</button>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div id="subquestions_${question.id}"></div>
+                `;
+                
+                container.appendChild(questionDiv);
+                
+                // Render sub-questions
+                if (question.subQuestions && question.subQuestions.length > 0) {
+                    const subContainer = document.getElementById(`subquestions_${question.id}`);
+                    renderQuestions(question.subQuestions, subContainer, level + 1);
+                }
+            });
+        }
+
+        // Handle Enter key in option input
+        function handleOptionKeyPress(event, questionId) {
+            if (event.key === 'Enter') {
+                addOption(questionId);
+            }
+        }
+
+        // Update question text
+        function updateQuestionText(questionId, newText) {
+            const question = findQuestionById(currentForm.questions, questionId);
+            if (question) {
+                question.text = newText;
+                updateJsonOutput();
+                updateFormPreview();
+            }
+        }
+
+        // Change question type
+        function changeQuestionType(questionId, newType) {
+            const question = findQuestionById(currentForm.questions, questionId);
+            if (question) {
+                question.type = newType;
+                
+                // Reset options for non-option types
+                if (!['radio', 'multiselect', 'checkbox'].includes(newType)) {
+                    question.options = [];
+                }
+                
+                // Set default maxSelections for multiselect
+                if (newType === 'multiselect') {
+                    question.maxSelections = question.maxSelections || 3;
+                } else {
+                    question.maxSelections = null;
+                }
+                
+                updateFormDisplay();
+                updateJsonOutput();
+            }
+        }
+
+        // Add option to question
+        function addOption(questionId) {
+            const question = findQuestionById(currentForm.questions, questionId);
+            const input = document.getElementById(`newOption_${questionId}`);
+            
+            if (question && input && input.value.trim()) {
+                question.options.push(input.value.trim());
+                input.value = '';
+                updateFormDisplay();
+                updateJsonOutput();
+                updateWorkflowStep(4);
+            }
+        }
+
+        // Update option text
+        function updateOption(questionId, optionIndex, newText) {
+            const question = findQuestionById(currentForm.questions, questionId);
+            if (question && question.options[optionIndex] !== undefined) {
+                question.options[optionIndex] = newText;
+                updateJsonOutput();
+                updateFormPreview();
+            }
+        }
+
+        // Remove option
+        function removeOption(questionId, optionIndex) {
+            const question = findQuestionById(currentForm.questions, questionId);
+            if (question) {
+                question.options.splice(optionIndex, 1);
+                updateFormDisplay();
+                updateJsonOutput();
+            }
+        }
+
+        // Set selected question for adding sub-question
+        function setSelectedQuestionForSubQ(questionId) {
+            selectedQuestionForSubQ = questionId;
+            alert('Now select a question from the master library to add as a sub-question');
+            
+            // Modify the add button temporarily
+            const addBtn = document.getElementById('addQuestionBtn');
+            addBtn.textContent = '➕ Add as Sub-Question';
+            addBtn.onclick = () => {
+                addSelectedQuestion(selectedQuestionForSubQ);
+                selectedQuestionForSubQ = null;
+                addBtn.textContent = '➕ Add Selected Question';
+                addBtn.onclick = addSelectedQuestion;
+            };
+        }
+
+        // Add sub-question for specific option
+        function addSubQuestionForOption(parentId, optionValue) {
+            if (!selectedMasterQuestion) {
+                alert('Please select a question from the master library first');
+                return;
+            }
+            
+            const questionId = `q_${++questionCounter}`;
+            
+            const formQuestion = {
+                id: questionId,
+                masterId: selectedMasterQuestion.id,
+                text: selectedMasterQuestion.text,
+                type: selectedMasterQuestion.type,
+                options: selectedMasterQuestion.options ? [...selectedMasterQuestion.options] : [],
+                maxSelections: selectedMasterQuestion.max_selections || null,
+                parentId: parentId,
+                conditions: [{
+                    parentQuestionId: parentId,
+                    triggerValue: optionValue,
+                    action: 'show'
+                }],
+                subQuestions: [],
+                required: false
+            };
+
+            const parent = findQuestionById(currentForm.questions, parentId);
+            if (parent) {
+                parent.subQuestions.push(formQuestion);
+            }
+
+            updateFormDisplay();
+            updateJsonOutput();
+            updateWorkflowStep(4);
+            
+            // Reset selection
+            selectedMasterQuestion = null;
+            document.querySelectorAll('.master-question').forEach(q => q.classList.remove('selected'));
+            document.getElementById('addQuestionBtn').disabled = true;
+        }
+
+        // Remove question
+        function removeQuestion(questionId) {
+            function removeFromArray(questions) {
+                for (let i = 0; i < questions.length; i++) {
+                    if (questions[i].id === questionId) {
+                        questions.splice(i, 1);
+                        return true;
+                    }
+                    if (questions[i].subQuestions && removeFromArray(questions[i].subQuestions)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            removeFromArray(currentForm.questions);
+            updateFormDisplay();
+            updateJsonOutput();
+        }
+
+        // Update JSON output
+        function updateJsonOutput() {
+            const jsonContainer = document.getElementById('jsonOutput');
+            jsonContainer.textContent = JSON.stringify(currentForm, null, 2);
+        }
+
+        // Update form preview
+        function updateFormPreview() {
+            const container = document.getElementById('renderedForm');
+            
+            if (currentForm.questions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Build a form to see the preview</h3>
+                        <p>Add questions and options to see how your form will look to users</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            renderFormPreview(currentForm.questions, container, 0);
+        }
+
+        // Render form preview
+        function renderFormPreview(questions, container, level) {
+            questions.forEach(question => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = `rendered-question ${level > 0 ? 'nested' : ''}`;
+                
+                let inputHtml = '';
+                
+                switch (question.type) {
+                    case 'text':
+                        inputHtml = '<input type="text" class="form-input" placeholder="Enter your answer">';
+                        break;
+                    case 'number':
+                        inputHtml = '<input type="number" class="form-input" placeholder="Enter a number">';
+                        break;
+                    case 'date':
+                        inputHtml = '<input type="date" class="form-input">';
+                        break;
+                    case 'radio':
+                        inputHtml = `
+                            <div class="radio-group">
+                                ${question.options.map(option => `
+                                    <div class="radio-item">
+                                        <input type="radio" name="${question.id}" value="${option}">
+                                        <label>${option}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                        break;
+                    case 'multiselect':
+                    case 'checkbox':
+                        inputHtml = `
+                            <div class="checkbox-group">
+                                ${question.options.map(option => `
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" name="${question.id}" value="${option}">
+                                        <label>${option}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                        break;
+                }
+                
+                questionDiv.innerHTML = `
+                    <div class="question-label">${question.text}</div>
+                    ${inputHtml}
+                    <div id="preview_subquestions_${question.id}"></div>
+                `;
+                
+                container.appendChild(questionDiv);
+                
+                // Render sub-questions
+                if (question.subQuestions && question.subQuestions.length > 0) {
+                    const subContainer = document.getElementById(`preview_subquestions_${question.id}`);
+                    renderFormPreview(question.subQuestions, subContainer, level + 1);
+                }
+            });
+        }
+
+        // Save form
+        function saveForm() {
+            const formName = document.getElementById('formName').value;
+            const tenantId = document.getElementById('tenantId').value;
+            const formTags = document.getElementById('formTags').value;
+            
+            if (!formName || !tenantId) {
+                alert('Please enter form name and tenant ID');
+                return;
+            }
+            
+            currentForm.name = formName;
+            currentForm.tenantId = tenantId;
+            currentForm.tags = [formTags];
+            currentForm.updatedAt = new Date().toISOString();
+            
+            localStorage.setItem(`form_${tenantId}_${formName}`, JSON.stringify(currentForm));
+            
+            const status = document.getElementById('saveStatus');
+            status.innerHTML = '<span style="color: #48bb78; font-weight: 500;">✅ Form saved successfully!</span>';
+            setTimeout(() => status.innerHTML = '', 3000);
+            
+            updateJsonOutput();
+        }
+
+        // Load form
+        function loadForm() {
+            const formName = document.getElementById('formName').value;
+            const tenantId = document.getElementById('tenantId').value;
+            
+            if (!formName || !tenantId) {
+                alert('Please enter form name and tenant ID');
+                return;
+            }
+            
+            const savedForm = localStorage.getItem(`form_${tenantId}_${formName}`);
+            if (savedForm) {
+                currentForm = JSON.parse(savedForm);
+                updateFormDisplay();
+                updateJsonOutput();
+                
+                const status = document.getElementById('saveStatus');
+                status.innerHTML = '<span style="color: #48bb78; font-weight: 500;">📂 Form loaded successfully!</span>';
+                setTimeout(() => status.innerHTML = '', 3000);
+            } else {
+                const status = document.getElementById('saveStatus');
+                status.innerHTML = '<span style="color: #f56565; font-weight: 500;">❌ Form not found!</span>';
+                setTimeout(() => status.innerHTML = '', 3000);
+            }
+        }
+
+        // Clear form
+        function clearForm() {
+            currentForm = {
+                id: null,
+                name: "",
+                tenantId: "",
+                tags: [],
+                questions: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            questionCounter = 0;
+            selectedMasterQuestion = null;
+            selectedQuestionForSubQ = null;
+            document.querySelectorAll('.master-question').forEach(q => q.classList.remove('selected'));
+            document.getElementById('addQuestionBtn').disabled = true;
+            updateWorkflowStep(1);
+            updateFormDisplay();
+            updateJsonOutput();
+        }
+
+        // Submit form response
+        function submitForm() {
+            const responses = {};
+            
+            document.querySelectorAll('#renderedForm input').forEach(input => {
+                if (input.type === 'radio' || input.type === 'checkbox') {
+                    if (input.checked) {
+                        if (!responses[input.name]) responses[input.name] = [];
+                        responses[input.name].push(input.value);
+                    }
+                } else {
+                    if (input.value) {
+                        responses[input.name] = input.value;
+                    }
+                }
+            });
+            
+            const response = {
+                formId: currentForm.id,
+                tenantId: currentForm.tenantId,
+                responses: responses,
+                submittedAt: new Date().toISOString(),
+                userId: 'user_' + Math.random().toString(36).substr(2, 9)
+            };
+            
+            console.log('Form Response:', response);
+            alert('Form submitted! Check console for response data.');
+        }
+
+        // Switch tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Initialize when page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
